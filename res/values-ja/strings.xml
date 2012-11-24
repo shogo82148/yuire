@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">お湯入れた</string>
+    <string name="title_activity_main">お湯入れた</string>
+    <string name="menu_login">ログイン</string>
+    <string name="menu_logout">ログアウト</string>
+    <string name="menu_settings">設定</string>
+    <string name="title_activity_oauth">ログイン</string>
+    <string name="button_start_login">Twitterにログイン</string>
+    <string name="text_login">ボタンを押すとブラウザが開きます。ログインして、表示された数字を入力してください。</string>
+    <string name="text_pin_code">PINコード</string>
+    <string name="button_login">ログイン</string>
+
+</resources>
