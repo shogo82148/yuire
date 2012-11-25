@@ -6,9 +6,6 @@
     <string name="menu_logout">logout</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_oauth">OAuthActivity</string>
-    <string name="button_start_login">Login to Twitter</string>
-    <string name="text_login">The button will open your browser. Please login to Twitter and input your PIN code.</string>
-    <string name="text_pin_code">Your PIN code</string>
-    <string name="button_login">Login</string>
+    <string name="text_login">Now login&#8230;</string>
 
 </resources>

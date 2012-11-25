@@ -13,48 +13,53 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.app.Activity;
 import android.content.Intent;
-import android.view.Menu;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.EditText;
+import android.util.Log;
 
-public class OAuthActivity extends Activity implements OnClickListener {
+public class OAuthActivity extends Activity {
+	public final static String EXTRA_CALLBACK = "callback";
 	public final static String EXTRA_CONSUMER_KEY = "consumer_key";
 	public final static String EXTRA_CONSUMER_SECRET = "consumer_secret";
 	public final static String EXTRA_ACCESS_TOKEN = "access_token";
 	public final static String EXTRA_ACCESS_TOKEN_SECRET = "access_token_secret";
+	public final static String EXTRA_PACKAGE_NAME = "package";
+	public final static String EXTRA_CLASS_NAME = "class_name";
 
 	private final Handler mHandler = new Handler(); 
 	private RequestToken mRequestToken;
     final AsyncTwitterFactory factory = new AsyncTwitterFactory();
     final AsyncTwitter twitter = factory.getInstance();
-	
+    
 	private final TwitterListener listener = new TwitterAdapter() {
 		@Override
 		public void gotOAuthRequestToken(RequestToken token) {
-			mHandler.post(new Runnable() {
-				public void run() {
-					final View startLogin = findViewById(R.id.button_start_login);
-					final View progress = findViewById(R.id.progressBar1);
-					startLogin.setEnabled(true);
-					progress.setVisibility(View.INVISIBLE);
-				}
-			});
 			mRequestToken = token;
+			final Intent intent = new Intent(Intent.ACTION_VIEW,
+					Uri.parse(mRequestToken.getAuthorizationURL()));
+			startActivity(intent);
 		}
 		
 		@Override
 		public void gotOAuthAccessToken(AccessToken token) {
-			final Intent intent = new Intent();
-			intent.putExtra(EXTRA_ACCESS_TOKEN, token.getToken());
-			intent.putExtra(EXTRA_ACCESS_TOKEN_SECRET, token.getTokenSecret());
-			setResult(Activity.RESULT_OK, intent);
+			final Intent ointent = getIntent();
+			final String package_name = ointent.getStringExtra(EXTRA_PACKAGE_NAME);
+			final String class_name = ointent.getStringExtra(EXTRA_CLASS_NAME);
+			final String stoken = token.getToken();
+			final String token_secret = token.getTokenSecret();
+			mHandler.post(new Runnable() {
+				public void run() {
+					final Intent intent = new Intent();
+					intent.setClassName(package_name, class_name);
+					intent.putExtra(EXTRA_ACCESS_TOKEN, stoken);
+					intent.putExtra(EXTRA_ACCESS_TOKEN_SECRET, token_secret);
+					startActivity(intent);
+				}
+			});
 			finish();
 		}
 		
 		@Override
 		public void onException(TwitterException e, TwitterMethod method) {
-			setResult(Activity.RESULT_CANCELED);
+			Log.e("Twitter", e.toString());
 			finish();
 		}
 	};
@@ -68,47 +73,17 @@ public class OAuthActivity extends Activity implements OnClickListener {
         final Intent intent = getIntent();
         final String consumer_key = intent.getStringExtra(EXTRA_CONSUMER_KEY);
         final String consumer_secret = intent.getStringExtra(EXTRA_CONSUMER_SECRET);
+        final String callback = intent.getStringExtra(EXTRA_CALLBACK);
         twitter.addListener(listener);
         twitter.setOAuthConsumer(consumer_key, consumer_secret);
-        twitter.getOAuthRequestTokenAsync();
-        
-        // AddEventListener
-        final View start_login = findViewById(R.id.button_start_login);
-        start_login.setOnClickListener(this);
-        final View login = findViewById(R.id.button_login);
-        login.setOnClickListener(this);
+        twitter.getOAuthRequestTokenAsync(callback);
     }
-
+    
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_oauth, menu);
-        return true;
+    public void onNewIntent(Intent intent) {
+    	final Uri uri = intent.getData();
+    	if(uri == null) return ;
+    	final String verifier = uri.getQueryParameter("oauth_verifier");
+    	twitter.getOAuthAccessTokenAsync(mRequestToken, verifier);
     }
-
-	@Override
-	public void onClick(View v) {
-		switch(v.getId()) {
-		case R.id.button_start_login:
-			{
-				final View startLogin = findViewById(R.id.button_start_login);
-				startLogin.setEnabled(false);
-				final Intent intent = new Intent(Intent.ACTION_VIEW,
-						Uri.parse(mRequestToken.getAuthorizationURL()));
-				startActivity(intent);
-			}
-			break;
-		case R.id.button_login:
-			{
-				final EditText editPin = (EditText)findViewById(R.id.edit_pin_code);
-				final View progress = findViewById(R.id.progressBar1);
-				final View login = findViewById(R.id.button_login);
-				login.setEnabled(false);
-				progress.setVisibility(View.VISIBLE);
-	
-				final String pin = editPin.getText().toString();
-				twitter.getOAuthAccessTokenAsync(mRequestToken, pin);
-			}
-			break;
-		}
-	}
 }

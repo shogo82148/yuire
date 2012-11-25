@@ -14,16 +14,23 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
-            android:label="@string/title_activity_main" >
+            android:label="@string/title_activity_main"
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".OAuthActivity"
-            android:label="@string/title_activity_oauth" >
+            android:label="@string/title_activity_oauth"
+            android:launchMode="singleTask" >
+			<intent-filter>
+			    <action android:name="android.intent.action.VIEW" />
+			    <category android:name="android.intent.category.DEFAULT" />
+			    <category android:name="android.intent.category.BROWSABLE"/>
+			    <data android:scheme="yuirecallback" />
+			</intent-filter>
         </activity>
     </application>
 

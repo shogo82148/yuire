@@ -21,11 +21,13 @@ import android.view.View;
 import android.view.View.OnClickListener;
 
 public class MainActivity extends Activity implements OnClickListener {
-	public final static String KEY_ACCESS_TOKEN = "access_token";
-	public final static String KEY_ACCESS_TOKEN_SECRET = "access_token_secret";
-	public static final String CONSUMER_KEY = "qfPYZnAz4lOrz0VOdo16Pg";
-	public static final String CONSUMER_SECRET = "StNpMyza8VG6kMu7xFDwveAk4Kn8hplBq3bZPV4sY";
-	private static final int REQUEST_ACCESS_TOKEN = 0;
+	private static final String PACKAGE_NAME = "net.sorablue.shogo82148.yuire";
+	private static final String CLASS_NAME = "MainActivity";
+	private final static String KEY_ACCESS_TOKEN = "access_token";
+	private final static String KEY_ACCESS_TOKEN_SECRET = "access_token_secret";
+	private final static String CALLBACK_URL = "yuirecallback://callback/";
+	private static final String CONSUMER_KEY = "qfPYZnAz4lOrz0VOdo16Pg";
+	private static final String CONSUMER_SECRET = "StNpMyza8VG6kMu7xFDwveAk4Kn8hplBq3bZPV4sY";
 	
     final AsyncTwitterFactory factory = new AsyncTwitterFactory();
     final AsyncTwitter twitter = factory.getInstance();
@@ -49,7 +51,20 @@ public class MainActivity extends Activity implements OnClickListener {
         
         twitter.addListener(listener);
         twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
-        final AccessToken access_token = loadAccessToken();
+
+        final Intent intent = getIntent();
+        AccessToken access_token = null;
+        if(intent != null ) {
+	        final String token = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN);
+			final String token_secret = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN_SECRET);
+			if(token != null && token_secret != null) {
+				access_token = new AccessToken(token, token_secret);
+				saveAccessToken(access_token);
+			}
+        }
+        if(access_token == null) {
+        	access_token = loadAccessToken();
+        }
         if(access_token != null) {
         	twitter.setOAuthAccessToken(access_token);
         }
@@ -73,7 +88,10 @@ public class MainActivity extends Activity implements OnClickListener {
     		Intent intent = new Intent(this, OAuthActivity.class);
     		intent.putExtra(OAuthActivity.EXTRA_CONSUMER_KEY, CONSUMER_KEY);
     		intent.putExtra(OAuthActivity.EXTRA_CONSUMER_SECRET, CONSUMER_SECRET);
-    		startActivityForResult(intent, REQUEST_ACCESS_TOKEN);
+    		intent.putExtra(OAuthActivity.EXTRA_CALLBACK, CALLBACK_URL);
+    		intent.putExtra(OAuthActivity.EXTRA_PACKAGE_NAME, PACKAGE_NAME);
+    		intent.putExtra(OAuthActivity.EXTRA_CLASS_NAME, PACKAGE_NAME + "." + CLASS_NAME);
+    		startActivity(intent);
     		break;
     	}
     	case R.id.menu_logout:
@@ -81,20 +99,6 @@ public class MainActivity extends Activity implements OnClickListener {
     		break;
     	}
     	return super.onOptionsItemSelected(item);
-    }
-    
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	switch(requestCode) {
-    	case REQUEST_ACCESS_TOKEN:
-    		if(resultCode == Activity.RESULT_OK) {
-	    		final String token = data.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN);
-	    		final String token_secret = data.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN_SECRET);
-	    		final AccessToken access_token = new AccessToken(token, token_secret);
-	    		twitter.setOAuthAccessToken(access_token);
-	    		saveAccessToken(access_token);
-    		}
-    	}
     }
     
     private void saveAccessToken(AccessToken access_token) {
@@ -107,7 +111,8 @@ public class MainActivity extends Activity implements OnClickListener {
 			e.putString(KEY_ACCESS_TOKEN_SECRET, token_secret);
 		} else {
 			e.putString(KEY_ACCESS_TOKEN, "");
-			e.putString(KEY_ACCESS_TOKEN_SECRET, "");		
+			e.putString(KEY_ACCESS_TOKEN_SECRET, "");
+			twitter.setOAuthAccessToken(null);
 		}
 		e.commit();
     }
