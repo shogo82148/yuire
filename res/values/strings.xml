@@ -7,5 +7,9 @@
     <string name="menu_settings">Settings</string>
     <string name="title_activity_oauth">OAuthActivity</string>
     <string name="text_login">Now login&#8230;</string>
-
+    <string name="message_tweeted">Sent Tweet!</string>
+    <string name="message_fail">Fail to send</string>
+    <string name="message_fail_login">Fail to login</string>
+    <string name="message_success_login">Success to login</string>
+    
 </resources>

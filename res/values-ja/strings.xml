@@ -8,5 +8,9 @@
     <string name="menu_settings">設定</string>
     <string name="title_activity_oauth">ログイン</string>
     <string name="text_login">ログインしています</string>
-
+    <string name="message_tweeted">お湯入りました！</string>
+    <string name="message_fail">お湯はこぼれました</string>
+    <string name="message_fail_login">ログインに失敗しました</string>
+    <string name="message_success_login">ログインに成功しました</string>
+    
 </resources>

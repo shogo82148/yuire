@@ -23,15 +23,22 @@ public class OAuthActivity extends Activity {
 	public final static String EXTRA_ACCESS_TOKEN_SECRET = "access_token_secret";
 	public final static String EXTRA_PACKAGE_NAME = "package";
 	public final static String EXTRA_CLASS_NAME = "class_name";
+	public final static String EXTRA_STATUS = "status";
+	
+	public final static int STATUS_NONE = -1;
+	public final static int STATUS_OK = 0;
+	public final static int STATUS_ERROR = 1;
 
 	private final Handler mHandler = new Handler(); 
 	private RequestToken mRequestToken;
     final AsyncTwitterFactory factory = new AsyncTwitterFactory();
     final AsyncTwitter twitter = factory.getInstance();
+    final Activity context = this;
     
 	private final TwitterListener listener = new TwitterAdapter() {
 		@Override
 		public void gotOAuthRequestToken(RequestToken token) {
+			Log.d("Twitter", "gotOAuthRequestToken");
 			mRequestToken = token;
 			final Intent intent = new Intent(Intent.ACTION_VIEW,
 					Uri.parse(mRequestToken.getAuthorizationURL()));
@@ -40,6 +47,7 @@ public class OAuthActivity extends Activity {
 		
 		@Override
 		public void gotOAuthAccessToken(AccessToken token) {
+			Log.d("Twitter", "gotOAuthAccessToken");
 			final Intent ointent = getIntent();
 			final String package_name = ointent.getStringExtra(EXTRA_PACKAGE_NAME);
 			final String class_name = ointent.getStringExtra(EXTRA_CLASS_NAME);
@@ -49,6 +57,7 @@ public class OAuthActivity extends Activity {
 				public void run() {
 					final Intent intent = new Intent();
 					intent.setClassName(package_name, class_name);
+					intent.putExtra(EXTRA_STATUS, STATUS_OK);
 					intent.putExtra(EXTRA_ACCESS_TOKEN, stoken);
 					intent.putExtra(EXTRA_ACCESS_TOKEN_SECRET, token_secret);
 					startActivity(intent);
@@ -60,6 +69,18 @@ public class OAuthActivity extends Activity {
 		@Override
 		public void onException(TwitterException e, TwitterMethod method) {
 			Log.e("Twitter", e.toString());
+			final Intent ointent = getIntent();
+			final String package_name = ointent.getStringExtra(EXTRA_PACKAGE_NAME);
+			final String class_name = ointent.getStringExtra(EXTRA_CLASS_NAME);
+
+			mHandler.post(new Runnable() {
+				public void run() {
+					final Intent intent = new Intent();
+					intent.setClassName(package_name, class_name);
+					intent.putExtra(EXTRA_STATUS, STATUS_ERROR);
+					startActivity(intent);
+				}
+			});
 			finish();
 		}
 	};
@@ -68,7 +89,7 @@ public class OAuthActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_oauth);
-        
+                
         // Request Request Token
         final Intent intent = getIntent();
         final String consumer_key = intent.getStringExtra(EXTRA_CONSUMER_KEY);

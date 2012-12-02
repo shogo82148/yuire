@@ -9,6 +9,7 @@ import twitter4j.TwitterListener;
 import twitter4j.TwitterMethod;
 import twitter4j.auth.AccessToken;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
 	private static final String PACKAGE_NAME = "net.sorablue.shogo82148.yuire";
@@ -29,17 +31,29 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final String CONSUMER_KEY = "qfPYZnAz4lOrz0VOdo16Pg";
 	private static final String CONSUMER_SECRET = "StNpMyza8VG6kMu7xFDwveAk4Kn8hplBq3bZPV4sY";
 	
+	private final Handler mHandler = new Handler();
+	private final Activity context = this;
     final AsyncTwitterFactory factory = new AsyncTwitterFactory();
     final AsyncTwitter twitter = factory.getInstance();
     
 	private final TwitterListener listener = new TwitterAdapter() {
 		@Override
 		public void updatedStatus(Status status) {
+			mHandler.post(new Runnable() {
+				public void run() {
+					Toast.makeText(context, R.string.message_tweeted, Toast.LENGTH_LONG).show();
+				}
+			});
 			Log.d("Twitter", status.getText());
 		}
 		
 		@Override
 		public void onException(TwitterException e, TwitterMethod method) {
+			mHandler.post(new Runnable() {
+				public void run() {
+					Toast.makeText(context, R.string.message_fail, Toast.LENGTH_LONG).show();
+				}
+			});
 			Log.d("Twitter", e.toString());
 		}
 	};
@@ -52,25 +66,31 @@ public class MainActivity extends Activity implements OnClickListener {
         twitter.addListener(listener);
         twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
 
-        final Intent intent = getIntent();
-        AccessToken access_token = null;
-        if(intent != null ) {
-	        final String token = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN);
-			final String token_secret = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN_SECRET);
-			if(token != null && token_secret != null) {
-				access_token = new AccessToken(token, token_secret);
-				saveAccessToken(access_token);
-			}
-        }
-        if(access_token == null) {
-        	access_token = loadAccessToken();
-        }
+        final AccessToken access_token = loadAccessToken();
         if(access_token != null) {
         	twitter.setOAuthAccessToken(access_token);
         }
         
         final View yu = findViewById(R.id.button_hot_water);
         yu.setOnClickListener(this);
+    }
+    
+    @Override
+    public void onNewIntent(Intent intent) {
+    	final int status = intent.getIntExtra(OAuthActivity.EXTRA_STATUS, OAuthActivity.STATUS_NONE);
+        if(status == OAuthActivity.STATUS_OK) {
+        	final String token = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN);
+			final String token_secret = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN_SECRET);
+			if(token != null && token_secret != null) {
+				Log.d("Twitter", "gotAccessToken from OAuthAcrivity");
+				final AccessToken access_token = new AccessToken(token, token_secret);
+				saveAccessToken(access_token);
+	        	twitter.setOAuthAccessToken(access_token);
+				Toast.makeText(this, R.string.message_success_login, Toast.LENGTH_LONG).show();
+			}
+        } else if(status == OAuthActivity.STATUS_ERROR) {
+        	Toast.makeText(this, R.string.message_fail_login, Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
