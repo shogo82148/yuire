@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
@@ -27,6 +28,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final String CLASS_NAME = "MainActivity";
 	private final static String KEY_ACCESS_TOKEN = "access_token";
 	private final static String KEY_ACCESS_TOKEN_SECRET = "access_token_secret";
+	private final static String KEY_SCREEN_NAME = "screen_name";
 	private final static String CALLBACK_URL = "yuirecallback://callback/";
 	private static final String CONSUMER_KEY = "qfPYZnAz4lOrz0VOdo16Pg";
 	private static final String CONSUMER_SECRET = "StNpMyza8VG6kMu7xFDwveAk4Kn8hplBq3bZPV4sY";
@@ -35,6 +37,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private final Activity context = this;
     final AsyncTwitterFactory factory = new AsyncTwitterFactory();
     final AsyncTwitter twitter = factory.getInstance();
+    private boolean logged_in;
     
 	private final TwitterListener listener = new TwitterAdapter() {
 		@Override
@@ -63,13 +66,10 @@ public class MainActivity extends Activity implements OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        logged_in = false;
         twitter.addListener(listener);
         twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET);
-
-        final AccessToken access_token = loadAccessToken();
-        if(access_token != null) {
-        	twitter.setOAuthAccessToken(access_token);
-        }
+        login();
         
         final View yu = findViewById(R.id.button_hot_water);
         yu.setOnClickListener(this);
@@ -81,12 +81,15 @@ public class MainActivity extends Activity implements OnClickListener {
         if(status == OAuthActivity.STATUS_OK) {
         	final String token = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN);
 			final String token_secret = intent.getStringExtra(OAuthActivity.EXTRA_ACCESS_TOKEN_SECRET);
+			final String screen_name = intent.getStringExtra(OAuthActivity.EXTRA_SCREEN_NAME);
 			if(token != null && token_secret != null) {
 				Log.d("Twitter", "gotAccessToken from OAuthAcrivity");
 				final AccessToken access_token = new AccessToken(token, token_secret);
-				saveAccessToken(access_token);
+				saveAccessToken(access_token, screen_name);
 	        	twitter.setOAuthAccessToken(access_token);
 				Toast.makeText(this, R.string.message_success_login, Toast.LENGTH_LONG).show();
+				final TextView text_screen_name = (TextView)findViewById(R.id.textScreenName);
+				text_screen_name.setText(getResources().getString(R.string.text_screen_name, screen_name));
 			}
         } else if(status == OAuthActivity.STATUS_ERROR) {
         	Toast.makeText(this, R.string.message_fail_login, Toast.LENGTH_LONG).show();
@@ -115,13 +118,15 @@ public class MainActivity extends Activity implements OnClickListener {
     		break;
     	}
     	case R.id.menu_logout:
-    		saveAccessToken(null);
+    		saveAccessToken(null, null);
+			final TextView text_screen_name = (TextView)findViewById(R.id.textScreenName);
+			text_screen_name.setText(R.string.text_not_login);
     		break;
     	}
     	return super.onOptionsItemSelected(item);
     }
     
-    private void saveAccessToken(AccessToken access_token) {
+    private void saveAccessToken(AccessToken access_token, String screen_name) {
 		final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 		final Editor e = pref.edit();
 		if(access_token != null) {
@@ -129,22 +134,26 @@ public class MainActivity extends Activity implements OnClickListener {
 	    	final String token_secret = access_token.getTokenSecret();
 			e.putString(KEY_ACCESS_TOKEN, token);
 			e.putString(KEY_ACCESS_TOKEN_SECRET, token_secret);
+			e.putString(KEY_SCREEN_NAME, screen_name);
 		} else {
 			e.putString(KEY_ACCESS_TOKEN, "");
 			e.putString(KEY_ACCESS_TOKEN_SECRET, "");
+			e.putString(KEY_SCREEN_NAME, "");
 			twitter.setOAuthAccessToken(null);
 		}
 		e.commit();
     }
     
-    private AccessToken loadAccessToken() {
+    private void login() {
 		final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 		final String token = pref.getString(KEY_ACCESS_TOKEN, "");
 		final String token_secret = pref.getString(KEY_ACCESS_TOKEN_SECRET, "");
+		final String screen_name = pref.getString(KEY_SCREEN_NAME, "");
 		if(!token.equals("") && !token_secret.equals("")) {
-			return new AccessToken(token, token_secret);
-		} else {
-			return null;
+			twitter.setOAuthAccessToken(new AccessToken(token, token_secret));
+			final TextView text_screen_name = (TextView)findViewById(R.id.textScreenName);
+			text_screen_name.setText(getResources().getString(R.string.text_screen_name, screen_name));
+			logged_in = true;
 		}
     }
 

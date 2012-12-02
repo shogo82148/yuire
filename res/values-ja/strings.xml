@@ -12,5 +12,7 @@
     <string name="message_fail">お湯はこぼれました</string>
     <string name="message_fail_login">ログインに失敗しました</string>
     <string name="message_success_login">ログインに成功しました</string>
+    <string name="text_screen_name">%1$sとしてログインしています</string>
+    <string name="text_not_login">ログインしていません</string>
     
 </resources>

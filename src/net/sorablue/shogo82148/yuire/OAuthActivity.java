@@ -24,6 +24,7 @@ public class OAuthActivity extends Activity {
 	public final static String EXTRA_PACKAGE_NAME = "package";
 	public final static String EXTRA_CLASS_NAME = "class_name";
 	public final static String EXTRA_STATUS = "status";
+	public final static String EXTRA_SCREEN_NAME = "screen_name";
 	
 	public final static int STATUS_NONE = -1;
 	public final static int STATUS_OK = 0;
@@ -53,6 +54,7 @@ public class OAuthActivity extends Activity {
 			final String class_name = ointent.getStringExtra(EXTRA_CLASS_NAME);
 			final String stoken = token.getToken();
 			final String token_secret = token.getTokenSecret();
+			final String screen_name = token.getScreenName();
 			mHandler.post(new Runnable() {
 				public void run() {
 					final Intent intent = new Intent();
@@ -60,6 +62,7 @@ public class OAuthActivity extends Activity {
 					intent.putExtra(EXTRA_STATUS, STATUS_OK);
 					intent.putExtra(EXTRA_ACCESS_TOKEN, stoken);
 					intent.putExtra(EXTRA_ACCESS_TOKEN_SECRET, token_secret);
+					intent.putExtra(EXTRA_SCREEN_NAME, screen_name);
 					startActivity(intent);
 				}
 			});
