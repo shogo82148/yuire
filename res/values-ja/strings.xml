@@ -14,5 +14,6 @@
     <string name="message_success_login">ログインに成功しました</string>
     <string name="text_screen_name">%1$sとしてログインしています</string>
     <string name="text_not_login">ログインしていません</string>
+    <string name="message_must_login">ログインが必要です</string>
     
 </resources>

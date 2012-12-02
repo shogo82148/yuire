@@ -13,5 +13,6 @@
     <string name="message_success_login">Success to login</string>
     <string name="text_screen_name">Logged in as %1$s</string>
     <string name="text_not_login">Not logged in</string>
+    <string name="message_must_login">You have to login</string>
     
 </resources>

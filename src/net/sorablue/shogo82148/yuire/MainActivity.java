@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -90,6 +92,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				Toast.makeText(this, R.string.message_success_login, Toast.LENGTH_LONG).show();
 				final TextView text_screen_name = (TextView)findViewById(R.id.textScreenName);
 				text_screen_name.setText(getResources().getString(R.string.text_screen_name, screen_name));
+				logged_in = true;
 			}
         } else if(status == OAuthActivity.STATUS_ERROR) {
         	Toast.makeText(this, R.string.message_fail_login, Toast.LENGTH_LONG).show();
@@ -106,21 +109,13 @@ public class MainActivity extends Activity implements OnClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
     	switch(item.getItemId()) {
     	case R.id.menu_login:
-    	{
-    		// Start OAuthActivity to login
-    		Intent intent = new Intent(this, OAuthActivity.class);
-    		intent.putExtra(OAuthActivity.EXTRA_CONSUMER_KEY, CONSUMER_KEY);
-    		intent.putExtra(OAuthActivity.EXTRA_CONSUMER_SECRET, CONSUMER_SECRET);
-    		intent.putExtra(OAuthActivity.EXTRA_CALLBACK, CALLBACK_URL);
-    		intent.putExtra(OAuthActivity.EXTRA_PACKAGE_NAME, PACKAGE_NAME);
-    		intent.putExtra(OAuthActivity.EXTRA_CLASS_NAME, PACKAGE_NAME + "." + CLASS_NAME);
-    		startActivity(intent);
+    		start_login();
     		break;
-    	}
     	case R.id.menu_logout:
     		saveAccessToken(null, null);
 			final TextView text_screen_name = (TextView)findViewById(R.id.textScreenName);
 			text_screen_name.setText(R.string.text_not_login);
+			logged_in = false;
     		break;
     	}
     	return super.onOptionsItemSelected(item);
@@ -156,14 +151,38 @@ public class MainActivity extends Activity implements OnClickListener {
 			logged_in = true;
 		}
     }
+    
+    private void start_login() {
+		// Start OAuthActivity to login
+		Intent intent = new Intent(this, OAuthActivity.class);
+		intent.putExtra(OAuthActivity.EXTRA_CONSUMER_KEY, CONSUMER_KEY);
+		intent.putExtra(OAuthActivity.EXTRA_CONSUMER_SECRET, CONSUMER_SECRET);
+		intent.putExtra(OAuthActivity.EXTRA_CALLBACK, CALLBACK_URL);
+		intent.putExtra(OAuthActivity.EXTRA_PACKAGE_NAME, PACKAGE_NAME);
+		intent.putExtra(OAuthActivity.EXTRA_CLASS_NAME, PACKAGE_NAME + "." + CLASS_NAME);
+		startActivity(intent);
+    }
 
 	@Override
 	public void onClick(View v) {
 		switch(v.getId()) {
 		case R.id.button_hot_water:
-		{
-			twitter.updateStatus("@JO_RI_bot ‚¨“’“ü‚ê‚½");
-		}
+			if(logged_in){
+				twitter.updateStatus("@JO_RI_bot ‚¨“’“ü‚ê‚½");
+			} else {
+				final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+				alertDialogBuilder.setTitle(R.string.app_name);
+				alertDialogBuilder.setMessage(R.string.message_must_login);
+				alertDialogBuilder.setPositiveButton(R.string.menu_login, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						start_login();
+					}
+				});
+		        alertDialogBuilder.setCancelable(true);
+		        AlertDialog alertDialog = alertDialogBuilder.create();
+		        alertDialog.show();
+			}
 			break;
 		}
 	}
