@@ -26,6 +26,9 @@ public class OAuthActivity extends Activity {
 	public final static String EXTRA_STATUS = "status";
 	public final static String EXTRA_SCREEN_NAME = "screen_name";
 	
+	private final static String KEY_REQUEST_TOKEN = "token";
+	private final static String KEY_REQUEST_TOKEN_SECRET = "token_secret";
+	
 	public final static int STATUS_NONE = -1;
 	public final static int STATUS_OK = 0;
 	public final static int STATUS_ERROR = 1;
@@ -109,5 +112,21 @@ public class OAuthActivity extends Activity {
     	if(uri == null) return ;
     	final String verifier = uri.getQueryParameter("oauth_verifier");
     	twitter.getOAuthAccessTokenAsync(mRequestToken, verifier);
+    }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+    	super.onSaveInstanceState(outState);
+    	
+    	outState.putString(KEY_REQUEST_TOKEN, mRequestToken.getToken());
+    	outState.putString(KEY_REQUEST_TOKEN_SECRET, mRequestToken.getTokenSecret());    	
+    }
+    
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    	super.onRestoreInstanceState(savedInstanceState);
+    	
+    	final String token = savedInstanceState.getString(KEY_REQUEST_TOKEN);
+    	final String token_secret = savedInstanceState.getString(KEY_REQUEST_TOKEN_SECRET);
+    	mRequestToken = new RequestToken(token, token_secret);
     }
 }
